@@ -30,8 +30,8 @@ RedisManager redisManager = new RedisManager(redisUri, "Lobby");
 RedisPacket redisPacket = RedisPacket.of(
         redisManager.getServerId(), // 客户端唯一标识符名称
         "Lobby",    // 接收方, 客户端唯一标识符名称
-        "现在有几个玩家在Lobby服务器啊?",      // 消息主题/分类
-        "Hello, World!" // 消息内容
+        "查询人数",      // 消息主题/分类
+        "现在有几个玩家在Lobby服务器啊?" // 消息内容
 );
 ```
 
@@ -65,7 +65,7 @@ public class MyRedisListener implements RedisListener {
     // 为方法添加 RedisSubject 注解, 并且入参只有一个 RedisPacket, 即可标记为监听器方法;
     @RedisSubject(
             channel = "myChannel",   // 频道名称
-            subject = "egg",    // 分类/主题
+            subject = "查询人数",    // 分类/主题
             priority = 1,       // 监听器权重, 越高越先执行.
             autoSubscribe = true    // 自动订阅, 如果客户端没有订阅channel, 则在注册监听器的时候自动帮忙订阅.
     )
@@ -74,7 +74,7 @@ public class MyRedisListener implements RedisListener {
         System.out.println("收到了消息内容: " + payload);
         // 回复数据包, 创建时需要原始数据包作为入参, 再加上回复的内容即可构建;
         // 当目标收到回复数据包时, 才会执行回调函数, 具体可参考 3.
-        RedisPacket response = RedisPacket.ofResponse(packet, "回复的内容");
+        RedisPacket response = RedisPacket.ofResponse(packet, "114");
         response.publish("myChannel");
     }
 }
