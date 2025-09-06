@@ -72,7 +72,7 @@ public class MyRedisListener implements RedisListener {
     public void onReceivedEggSubjectMessage(RedisPacket packet) {
         String payload = packet.getPayload();
         System.out.println("收到了消息内容: " + payload);
-        // 回复数据包, 创建时需要原始数据包作为入参, 再加上回复的内容即可构建;
+        // 回复数据包, 创建时需要原始数据包和回复的内容作为入参;
         // 当目标收到回复数据包时, 才会执行回调函数, 具体可参考 3.
         RedisPacket response = RedisPacket.ofResponse(packet, "114");
         response.publish("myChannel");
