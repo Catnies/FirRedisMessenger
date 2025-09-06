@@ -4,6 +4,17 @@
 使用 Pubsub 实现的简单 Redis 消息广播通信库. <br />
 你可以轻松快速地创建 Redis数据包 和 监听器 进行简单的通信. <br />
 
+## 📚 插件 API
+```kotlin
+repositories {
+    maven("https://repo.catnies.top/releases/")
+}
+```
+```kotlin
+dependencies {
+    implementation("top.catnies:firredismessenger:1.0.0")
+}
+```
 
 ## 💻 使用方法
 1. 初始化管理器, 创建一个 RedisUri 对象, 然后创建 RedisManager 时还需要传入一个客户端唯一标识符名称：
