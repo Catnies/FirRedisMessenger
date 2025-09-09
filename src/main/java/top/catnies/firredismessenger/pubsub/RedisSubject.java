@@ -1,4 +1,4 @@
-package top.catnies.firredismessenger.api;
+package top.catnies.firredismessenger.pubsub;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

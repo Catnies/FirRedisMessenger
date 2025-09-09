@@ -1,4 +1,4 @@
-package top.catnies.firredismessenger;
+package top.catnies.firredismessenger.pubsub;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,8 +28,8 @@ public class RedisPacket {
     private UUID responseId; // 当数据包是回复数据包时, 需要携带回复数据包目标的原始ID;
 
     /** Message Additional Data **/
-    private Long publishTimestamp; // 广播时间
-    private String channel; // 广播频道
+    private Long publishTimestamp;  // 广播时间
+    private String channel;         // 广播频道
 
     /**
      * 构造 Reids 广播数据包
@@ -65,7 +65,7 @@ public class RedisPacket {
      * @return 数据包
      */
     public static RedisPacket ofBoardCast(@NotNull String sender, @NotNull String subject, @NotNull String payload) {
-        return new RedisPacket(sender, RedisManager.ALL_RECEIVERS, subject, payload);
+        return new RedisPacket(sender, RedisPubSubManager.ALL_RECEIVERS, subject, payload);
     }
 
     /**
@@ -110,8 +110,6 @@ public class RedisPacket {
 
     /** 拓展便携方法 **/
     public void publish(@NotNull String channel) {
-        RedisManager.getInstance().publish(channel, this);
+        RedisPubSubManager.getInstance().publish(channel, this);
     }
-
-
 }

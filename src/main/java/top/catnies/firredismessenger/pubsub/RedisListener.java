@@ -1,4 +1,4 @@
-package top.catnies.firredismessenger.api;
+package top.catnies.firredismessenger.pubsub;
 
 /**
  * 没有任何方法, 只是一个标记接口, 用于标识这个类是一个 Redis 监听器.

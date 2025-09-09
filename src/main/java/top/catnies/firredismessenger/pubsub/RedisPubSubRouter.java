@@ -1,27 +1,25 @@
-package top.catnies.firredismessenger;
+package top.catnies.firredismessenger.pubsub;
 
 import org.jetbrains.annotations.NotNull;
+import top.catnies.firredismessenger.RedisManager;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 
-public class RedisMessageRouter {
+public class RedisPubSubRouter {
 
     // [频道: [主题: [处理器(自带权重)] ]]
     private final Map<String, Map<String, CopyOnWriteArraySet<SubjectHandler>>> subjectHandlers = new ConcurrentHashMap<>();
 
     // 回调管理器
-    private final RedisCallback callbackManager;
+    private final RedisPubSubCallbackManager callbackManager;
     // 接收消息处理的线程池
-    private final ExecutorService dispatchExecutor = Executors.newFixedThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+    private final ExecutorService dispatchExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
 
-    public RedisMessageRouter(RedisCallback callbackManager) {
+    public RedisPubSubRouter(RedisPubSubCallbackManager callbackManager) {
         this.callbackManager = callbackManager;
     }
 
@@ -77,7 +75,7 @@ public class RedisMessageRouter {
         String receiver = packet.getReceiver();
 
         // 忽略非当前服务器的消息
-        if (!RedisManager.ALL_RECEIVERS.equals(receiver) && !currentServerId.equals(receiver)) return;
+        if (!RedisPubSubManager.ALL_RECEIVERS.equals(receiver) && !currentServerId.equals(receiver)) return;
 
         // 如果是响应消息, 先处理可能存在的回调
         if (packet.getResponseId() != null) {
@@ -104,12 +102,12 @@ public class RedisMessageRouter {
     private void handleResponse(RedisPacket responsePacket) {
         // 获取回调数据
         UUID originalMessageId = responsePacket.getResponseId();
-        RedisCallback.CallbackEntry entry = callbackManager.getPendingCallbacks().remove(originalMessageId);
+        RedisPubSubCallbackManager.CallbackEntry entry = callbackManager.getPendingCallbacks().remove(originalMessageId);
         assert entry != null;
-        Consumer<String> callback = entry.getPacket().getCallback();
+        Consumer<String> callback = entry.packet().getCallback();
         // 如果有超时回调
-        if (entry.getTimeOutFuture() != null && !entry.getTimeOutFuture().isDone()) {
-            boolean cancel = entry.getTimeOutFuture().cancel(false);
+        if (entry.timeOutFuture() != null && !entry.timeOutFuture().isDone()) {
+            boolean cancel = entry.timeOutFuture().cancel(false);
             // 如果超时回调取消成功, 并且有原始回调, 就执行原始回调;
             if (cancel && callback != null) {
                 dispatchExecutor.execute(() -> {
@@ -145,5 +143,13 @@ public class RedisMessageRouter {
                 }
             });
         });
+    }
+
+    /**
+     * 关闭消息路由
+     */
+    public void shutdown() {
+        dispatchExecutor.shutdown();
+        subjectHandlers.clear();
     }
 }

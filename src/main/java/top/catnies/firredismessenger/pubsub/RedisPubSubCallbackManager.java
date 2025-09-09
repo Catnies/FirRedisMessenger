@@ -1,20 +1,25 @@
-package top.catnies.firredismessenger;
+package top.catnies.firredismessenger.pubsub;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-public class RedisCallback {
+public class RedisPubSubCallbackManager {
     @Getter private final Map<UUID, CallbackEntry> pendingCallbacks = new ConcurrentHashMap<>(); // 正在等待回调的任务
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2); // 回调执行器
 
-    // TODO 优化回调处理的线程池? 不懂线程池捏
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2); // 执行器
+    /**
+     * 封装数据包和超时回调计时器的键
+     * @param packet 发送出去的数据包
+     * @param timeOutFuture 超时回调计时器
+     */
+    public record CallbackEntry(
+            @NotNull RedisPacket packet,
+            ScheduledFuture<?> timeOutFuture
+    ) { }
 
     /**
      * 注册Redis数据包的回调任务
@@ -33,14 +38,12 @@ public class RedisCallback {
                 }
             }, timeoutMs, TimeUnit.MILLISECONDS);
         }
-
         // 将回调任务注册到执行任务中.
         pendingCallbacks.put(packet.getMessageId(), new CallbackEntry(packet, timeOutFuture));
     }
 
-
     /**
-     * 关闭回调管理器，清理资源
+     * 关闭回调管理器，清理资源.
      */
     public void shutdown() {
         // 取消所有待处理的超时任务
@@ -49,21 +52,14 @@ public class RedisCallback {
                 entry.timeOutFuture.cancel(false);
             }
         }
+
         pendingCallbacks.clear();
+        scheduler.shutdown();
 
         // 等待最多5秒完成剩余任务
-        scheduler.shutdown();
         try {
             if (!scheduler.awaitTermination(5, TimeUnit.SECONDS))
                 scheduler.shutdownNow();
         } catch (InterruptedException e) { scheduler.shutdownNow(); }
-    }
-
-
-    @Data
-    @AllArgsConstructor
-    public static class CallbackEntry {
-        @NotNull private RedisPacket packet;
-        @Nullable private ScheduledFuture<?> timeOutFuture;
     }
 }

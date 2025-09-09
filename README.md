@@ -50,10 +50,10 @@ redisPacket.withOnTimeout(packet /* 发送的数据包 */ -> {
 4. 发布广播数据包.
 ```Java
 // 广播发布数据包;
-redisManager.publish(
+redisManager.getPubSubManager().publish(
         "myChannel",    // 广播的频道
         redisPacket,    // Redis数据包
-        10000           // 触发超时回调的时间
+        10000           // 触发超时回调的时间 (Ms)
 );
 ```
 
@@ -80,15 +80,15 @@ public class MyRedisListener implements RedisListener {
 }
 // 使用管理器注册监听器;
 RedisListener listener = new MyRedisListener();
-redisManager.registerListeners(listener);
+redisManager.getPubSubManager().registerListeners(listener);
 // 还可以注销监听器
-redisManager.unregisterListeners(listener);
+redisManager.getPubSubManager().unregisterListeners(listener);
 ```
 
 6. 其他工具方法.
 ```Java
 // 使用管理器注册监听器;
-redisManager.subscribeChannel("otherChannel");
+redisManager.getPubSubManager().subscribeChannel("otherChannel");
 // 关闭Redis
 redisManager.shutdown();
 ```
