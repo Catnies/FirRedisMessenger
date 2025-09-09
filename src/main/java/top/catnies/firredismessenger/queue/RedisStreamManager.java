@@ -8,6 +8,8 @@ import io.lettuce.core.api.sync.RedisCommands;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import top.catnies.firredismessenger.RedisManager;
+import top.catnies.firredismessenger.queue.decoder.RedisMessageDecoder;
+import top.catnies.firredismessenger.queue.decoder.RedisMessageDecoderRegistry;
 import top.catnies.firredismessenger.queue.message.*;
 
 import java.util.HashMap;

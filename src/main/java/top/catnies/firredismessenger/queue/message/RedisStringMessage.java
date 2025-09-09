@@ -2,6 +2,7 @@ package top.catnies.firredismessenger.queue.message;
 
 import lombok.Getter;
 import lombok.Setter;
+import top.catnies.firredismessenger.queue.decoder.RedisMessageDecoder;
 
 import java.util.HashMap;
 import java.util.Map;

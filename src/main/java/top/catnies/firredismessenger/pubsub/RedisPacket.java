@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import top.catnies.firredismessenger.RedisManager;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -75,7 +76,7 @@ public class RedisPacket {
      * @return 数据包
      */
     public static RedisPacket ofResponse(@NotNull RedisPacket original, @NotNull String responsePayload) {
-        RedisPacket responsePacket = new RedisPacket(original.receiver, original.sender, original.subject, responsePayload);
+        RedisPacket responsePacket = new RedisPacket(RedisManager.getInstance().getServerId(), original.sender, original.subject, responsePayload);
         responsePacket.responseId = original.messageId;
         return responsePacket;
     }

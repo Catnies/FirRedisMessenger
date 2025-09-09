@@ -1,4 +1,6 @@
-package top.catnies.firredismessenger.queue.message;
+package top.catnies.firredismessenger.queue.decoder;
+
+import top.catnies.firredismessenger.queue.message.RedisMessage;
 
 import java.util.Map;
 
