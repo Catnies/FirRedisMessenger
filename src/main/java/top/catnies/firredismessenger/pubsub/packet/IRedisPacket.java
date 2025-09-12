@@ -1,7 +1,7 @@
 package top.catnies.firredismessenger.pubsub.packet;
 
 
-public interface IRedisPacket<T> {
+public interface IRedisPacket {
 
     /**
      * 获取数据包的元数据信息
@@ -16,12 +16,4 @@ public interface IRedisPacket<T> {
      */
     String getSubject();
     void setSubject(String subject);
-
-    /**
-     * 获取消息内容
-     * @return 消息内容
-     */
-    T getPayload();
-    void setPayload(T payload);
-
 }

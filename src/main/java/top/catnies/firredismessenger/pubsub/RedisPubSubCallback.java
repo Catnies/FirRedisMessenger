@@ -67,7 +67,7 @@ public class RedisPubSubCallback {
     /**
      * 收到 RESPONSE 时调用
      */
-    public <T extends IRedisPacket<?>> void completeResponse(String packetId, T response) {
+    public <T extends IRedisPacket> void completeResponse(String packetId, T response) {
         CallbackEntry entry = pendingMap.get(packetId);
         if (entry == null) return;
         entry.future.completeResponse(response);
