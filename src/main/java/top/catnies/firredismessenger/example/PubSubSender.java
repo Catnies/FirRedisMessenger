@@ -3,7 +3,7 @@ package top.catnies.firredismessenger.example;
 import lombok.SneakyThrows;
 import top.catnies.firredismessenger.RedisManager;
 import top.catnies.firredismessenger.RedisUri;
-import top.catnies.firredismessenger.pubsub.RedisPacket;
+import top.catnies.firredismessenger.pubsub.packet.impl.StringRedisPacket;
 
 import static top.catnies.firredismessenger.RedisUri.*;
 
@@ -13,22 +13,20 @@ public class PubSubSender {
     public static void main(String[] args) {
         RedisUri redisUri = builder().ip("127.0.0.1").host(6379).build();
         RedisManager redisManager = new RedisManager(redisUri, "Spawn");
-        redisManager.getPubSubManager().subscribeChannel("kafe");
 
-        Thread.sleep(1000);
+        redisManager.getPubSubManager().subscribeChannel("qwq");
+        redisManager.getPubSubManager().getMessageRouter().registerHandler("qwq", StringRedisPacket.class, "aaa", stringRedisPacket -> {
+            System.out.println(stringRedisPacket.getPayload());
+        }, 1);
 
-        RedisPacket redisPacket = RedisPacket.of(
-                redisManager.getServerId(),
-                "Lobby",
-                "egg",
-                "Hello, World!"
-        );
-        redisPacket.withCallback(payload -> {
-            System.out.println(" Spawn 收到了回复消息: " + payload);
-        });
-        redisPacket.publish("kafe");
+        while (true) {
+            Thread.sleep(1000);
 
-        while (true) { }
+            StringRedisPacket stringRedisPacket = new StringRedisPacket("666", "777");
+            redisManager.getPubSubManager().publishPacket("qwq", new String[]{"Lobby"}, stringRedisPacket, () -> {
+                System.out.println("我收到了ACK!");
+            }, null, 0, null);
+        }
     }
 
 }

@@ -40,7 +40,7 @@ public class RedisManager {
             assert connection != null;
             // 缓存 模块功能
             // PubSub 模块功能
-            pubSubManager = new RedisPubSubManager(redisClient.connectPubSub());
+            pubSubManager = new RedisPubSubManager(redisClient);
             // Stream 模块功能
             streamManager = new RedisStreamManager(connection);
 
