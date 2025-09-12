@@ -13,8 +13,7 @@
 //
 //    public static final Gson SHARED_GSON = new GsonBuilder().create();
 //
-//    @Override
-//    public byte[] encode(IRedisPacket<?> packet) throws EncoderException {
+//    @Override//    public byte[] encode(IRedisPacket packet) throws EncoderException {
 //        try {
 //            String json = SHARED_GSON.toJson(packet);
 //            return json.getBytes(StandardCharsets.UTF_8);
@@ -24,13 +23,13 @@
 //    }
 //
 //    @Override
-//    public IRedisPacket<?> decode(byte[] data) throws DecoderException {
+//    public IRedisPacket decode(byte[] data) throws DecoderException {
 //        try {
 //            String json = new String(data, StandardCharsets.UTF_8);
 //            // 先解析 metadata 获取 typeId
 //            RedisPacketWrapper wrapper = SHARED_GSON.fromJson(json, RedisPacketWrapper.class);
 //            int typeId = wrapper.metadata.typeId;
-//            Class<? extends IRedisPacket<?>> clazz = RedisManager.getInstance().getPubSubManager().getPacketRegistry().getPacketClass(typeId);
+//            Class<? extends IRedisPacket> clazz = RedisManager.getInstance().getPubSubManager().getPacketRegistry().getPacketClass(typeId);
 //            if (clazz == null) {
 //                throw new DecoderException("Unknown typeId: " + typeId);
 //            }

@@ -49,7 +49,7 @@ public class RedisPubSubManager {
             @Override
             public void message(byte[] channel, byte[] message) {
                 String channelStr = new String(channel, StandardCharsets.UTF_8);
-                IRedisPacket<?> packet = decodePacket(message);
+                IRedisPacket packet = decodePacket(message);
                 // 看看这个消息是不是发给自己的;
                 for (String receiver : packet.getMetadata().receivers()) {
                     if (receiver.equals("*") || receiver.equals(RedisManager.getInstance().getServerId())) {
@@ -123,9 +123,9 @@ public class RedisPubSubManager {
     public RedisPacketFuture publishPacket(
             @NotNull String channel,
             @NotNull String[] receivers,
-            @NotNull IRedisPacket<?> packet,
+            @NotNull IRedisPacket packet,
             @Nullable Runnable ackCallback,
-            @Nullable Consumer<IRedisPacket<?>> responseCallback,
+            @Nullable Consumer<IRedisPacket> responseCallback,
             long timeoutMillis,
             @Nullable Runnable timeoutCallback
     ) {
@@ -165,7 +165,7 @@ public class RedisPubSubManager {
      * @param channel 目标频道
      * @param originPacket 需要回复的原始数据包
      */
-    public void publishAckPacket(@NotNull String channel, @NotNull IRedisPacket<?> originPacket) {
+    public void publishAckPacket(@NotNull String channel, @NotNull IRedisPacket originPacket) {
         // 完善ACK数据包
         AckRedisPacket packet = new AckRedisPacket();
         int packetId = packetRegistry.getPacketId(packet.getClass());
@@ -193,7 +193,7 @@ public class RedisPubSubManager {
      * @param originPacket 原始数据包
      * @param responsePacket 回复的数据包
      */
-    public void publishResponsePacket(@NotNull String channel, @NotNull IRedisPacket<?> originPacket, @NotNull IRedisPacket<?> responsePacket) {
+    public void publishResponsePacket(@NotNull String channel, @NotNull IRedisPacket originPacket, @NotNull IRedisPacket responsePacket) {
         // 完善数据包
         int packetId = packetRegistry.getPacketId(responsePacket.getClass());
         RedisPacketMetadata metadata = new RedisPacketMetadata(
@@ -217,14 +217,15 @@ public class RedisPubSubManager {
 
     // 协议格式: <metadataBytesLength:int>  <metadataBytes>  <packetBodyBytes>
     // 统一的序列化
-    private byte[] encodePacket(IRedisPacket<?> packet) {
+    private byte[] encodePacket(IRedisPacket packet) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              DataOutputStream dos = new DataOutputStream(bos)) {
             // 先将meta进行序列化
             IRedisPacketMetadata metadata = packet.getMetadata();
             byte[] metadataBytes = ((RedisPacketMetadata) metadata).toBytes();
             // 从packetId可以找到coder, 再将消息的body进行序列化
-            IRedisPacketCoder coder = packetRegistry.getPacketCoder(metadata.packetId());
+            // noinspection unchecked
+            RedisPacketCoder.IRedisPacketCoder<IRedisPacket> coder = (RedisPacketCoder.IRedisPacketCoder<IRedisPacket>) packetRegistry.getPacketCoder(metadata.packetId());
             if (coder == null) {
                 throw new IllegalArgumentException("Packet " + packet.getClass().getName() + " is not registered coder");
             }
@@ -240,7 +241,7 @@ public class RedisPubSubManager {
     }
 
     // 统一的反序列化
-    private IRedisPacket<?> decodePacket(byte[] data) {
+    private IRedisPacket decodePacket(byte[] data) {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              DataInputStream dis = new DataInputStream(bis)) {
             // 先读取 metadata length, 然后先反序列化metadata
@@ -249,12 +250,12 @@ public class RedisPubSubManager {
             dis.readFully(metadataBytes);
             RedisPacketMetadata metadata = RedisPacketMetadata.fromBytes(metadataBytes);
             // 有了 metadata 就可以找 coder, 再反序列化body部分
-            IRedisPacketCoder coder = packetRegistry.getPacketCoder(metadata.packetId());
+            RedisPacketCoder.IRedisPacketCoder<?> coder = packetRegistry.getPacketCoder(metadata.packetId());
             if (coder == null) {
                 throw new IllegalArgumentException("No coder found for typeId " + metadata.messageTypeId());
             }
             byte[] bodyBytes = dis.readAllBytes();
-            IRedisPacket<?> packet = coder.decode(bodyBytes);
+            IRedisPacket packet = coder.decode(bodyBytes);
             // 最后组合起来就是完整的packet了
             packet.setMetadata(metadata);
             return packet;

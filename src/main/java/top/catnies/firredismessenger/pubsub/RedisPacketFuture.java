@@ -8,13 +8,13 @@ import java.util.function.Consumer;
 public class RedisPacketFuture {
 
     private final CompletableFuture<Void> ackFuture = new CompletableFuture<>();
-    private final CompletableFuture<IRedisPacket<?>> responseFuture = new CompletableFuture<>();
+    private final CompletableFuture<IRedisPacket> responseFuture = new CompletableFuture<>();
 
     public void completeAck() {
         ackFuture.complete(null);
     }
 
-    public <T extends IRedisPacket<?>> void completeResponse(T response) {
+    public <T extends IRedisPacket> void completeResponse(T response) {
         responseFuture.complete(response);
     }
 
@@ -22,7 +22,7 @@ public class RedisPacketFuture {
         ackFuture.thenRun(action);
     }
 
-    public void onResponse(Consumer<IRedisPacket<?>> action) {
+    public void onResponse(Consumer<IRedisPacket> action) {
         responseFuture.thenAccept(action);
     }
 

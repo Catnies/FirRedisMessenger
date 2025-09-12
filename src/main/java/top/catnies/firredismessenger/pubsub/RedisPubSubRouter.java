@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 public class RedisPubSubRouter {
 
     // [频道: [消息Class -> [主题: [处理器(自带权重)] ]]
-    private final Map<String, Map<Class<? extends IRedisPacket<?>>, Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>>>> handlers = new ConcurrentHashMap<>();
+    private final Map<String, Map<Class<? extends IRedisPacket>, Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>>>> handlers = new ConcurrentHashMap<>();
     // 接收消息处理的线程池
     private final ExecutorService dispatchExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -22,7 +22,7 @@ public class RedisPubSubRouter {
      * @param handler 处理器回调逻辑
      * @param priority 权重, 越大的越先处理
      */
-    private record HandlerWrapper<T extends IRedisPacket<?>>(
+    private record HandlerWrapper<T extends IRedisPacket>(
             String channel,
             Class<T> packetType,
             String subject,
@@ -38,7 +38,7 @@ public class RedisPubSubRouter {
      * @param handler 处理器回调逻辑
      * @param priority 权重, 越大的越先处理
      */
-    public <T extends IRedisPacket<?>> void registerHandler(
+    public <T extends IRedisPacket> void registerHandler(
             String channel,
             Class<T> packetType,
             String subject,
@@ -61,13 +61,13 @@ public class RedisPubSubRouter {
      * @param subject 处理的主题
      * @param handler 处理器回调逻辑
      */
-    public <T extends IRedisPacket<?>> void unregisterHandler(
+    public <T extends IRedisPacket> void unregisterHandler(
             String channel,
             Class<T> packetType,
             String subject,
             Consumer<T> handler
     ) {
-        Map<Class<? extends IRedisPacket<?>>, Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>>> typeMap = handlers.get(channel);
+        Map<Class<? extends IRedisPacket>, Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>>> typeMap = handlers.get(channel);
         if (typeMap == null) return;
         Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>> subjectMap = typeMap.get(packetType);
         if (subjectMap == null) return;
@@ -79,8 +79,8 @@ public class RedisPubSubRouter {
     /**
      * 消息入口：这里接收一个已经解码好的 Packet
      */
-    public void handlePublishPacket(@NotNull String channel, @NotNull IRedisPacket<?> packet) {
-        Map<Class<? extends IRedisPacket<?>>, Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>>> typeMap = handlers.get(channel);
+    public void handlePublishPacket(@NotNull String channel, @NotNull IRedisPacket packet) {
+        Map<Class<? extends IRedisPacket>, Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>>> typeMap = handlers.get(channel);
         if (typeMap == null) return;
         Map<String, CopyOnWriteArrayList<HandlerWrapper<?>>> subjectMap = typeMap.get(packet.getClass());
         if (subjectMap == null) return;
@@ -93,7 +93,7 @@ public class RedisPubSubRouter {
                 try {
                     // 类型安全强转
                     @SuppressWarnings("unchecked")
-                    Consumer<IRedisPacket<?>> handler = (Consumer<IRedisPacket<?>>) wrapper.handler;
+                    Consumer<IRedisPacket> handler = (Consumer<IRedisPacket>) wrapper.handler;
                     handler.accept(packet);
                 } catch (Exception e) {
                     e.printStackTrace();
